@@ -31,3 +31,9 @@ export default class User extends BaseModel {
     }
   }
 }
+
+export type UserPayload = {
+  email: string
+  password: string
+  username: string
+}

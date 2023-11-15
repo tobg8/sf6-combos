@@ -12,6 +12,14 @@ const userRegistration = schema.create({
     rules.minLength(7),
     rules.regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])(?=.{8,})/),
   ]),
+  username: schema.string([
+    rules.alphaNum({
+      allow: ['space', 'underscore', 'dash'],
+    }),
+    rules.required(),
+    rules.minLength(3),
+    rules.unique({ table: 'users', column: 'username' }),
+  ]),
 })
 
 export { userRegistration, userLogin }
