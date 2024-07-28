@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { UserPayload } from 'App/Models/User'
+import UserRepository from 'App/Repositories/UserRepository'
 import { userRegistration, userLogin } from 'App/Validators/User'
-import User from 'App/Models/User'
 
 export default class UserController {
   public async login(ctx: HttpContextContract) {
@@ -8,9 +9,11 @@ export default class UserController {
       const payload = await ctx.request.validate({
         schema: userLogin,
       })
-      const token = await ctx.auth.use('api').attempt(payload.email, payload.password)
-      return token
+      const userRepo = new UserRepository()
+      const token = await userRepo.createToken(ctx, payload as UserPayload)
+      return ctx.response.created({ token: token })
     } catch (error) {
+      console.log(error)
       if (error.messages === undefined) {
         return ctx.response.badRequest('invalid credentials')
       }
@@ -24,14 +27,10 @@ export default class UserController {
         schema: userRegistration,
       })
 
-      const user = new User()
-      console.log(payload)
-      user.email = payload.email
-      user.password = payload.password
-      await user.save()
-
-      if (user.$isPersisted) {
-        const token = await ctx.auth.use('api').attempt(payload.email, payload.password)
+      const userRepo = new UserRepository()
+      const user = userRepo.register(payload)
+      if ((await user).$isPersisted) {
+        const token = await userRepo.createToken(ctx, payload)
         return ctx.response.created({ token: token })
       }
     } catch (error) {
